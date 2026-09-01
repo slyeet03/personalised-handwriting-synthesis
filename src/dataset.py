@@ -33,18 +33,28 @@ class Dataset(TorchDataset):
 # adding padding to have each batch the same dimensions
 def collate_fn(batch):
     strokes, texts = zip(*batch)
-
+    
+    # true length before padding
+    stroke_lengths = torch.tensor([len(s) for s in strokes])
+    
     padded_strokes = pad_sequence(strokes, batch_first=True)
     padded_texts = pad_sequence(texts, batch_first=True)
+    
+    max_len = padded_strokes.shape[1]
 
-    return padded_strokes,padded_texts
-
+    # checking whether the real length is less than paddded length or not, if it is then it means it is a padding so it it becomes 0 and true length becomes 1 making a mask
+    mask = torch.arange(max_len).unsqueeze(0) < stroke_lengths.unsqueeze(1)
+    
+    return padded_strokes, padded_texts, mask
 
 
 if __name__ == '__main__':
     dataset = Dataset('../dataset/deepwriting_training.npz')
     loader = DataLoader(dataset, batch_size=4, collate_fn=collate_fn)
     
-    batch_strokes, batch_texts = next(iter(loader))
+    batch_strokes, batch_texts, mask = next(iter(loader))
+    print("Mask shape:", mask.shape)
+    print("Mask dtype:", mask.dtype)
+    print("First row of mask:", mask[2])
     print("Batch strokes shape:", batch_strokes.shape)
     print("Batch texts shape:", batch_texts.shape)
