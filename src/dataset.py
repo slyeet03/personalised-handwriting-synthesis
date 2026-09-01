@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import DataLoader
 from torch.utils.data import Dataset as TorchDataset
 
 import vocab
@@ -28,13 +30,21 @@ class Dataset(TorchDataset):
         return (tensor_stroke,tensor_text)
          
 
+# adding padding to have each batch the same dimensions
+def collate_fn(batch):
+    strokes, texts = zip(*batch)
+
+    padded_strokes = pad_sequence(strokes, batch_first=True)
+    padded_texts = pad_sequence(texts, batch_first=True)
+
+    return padded_strokes,padded_texts
+
 
 
 if __name__ == '__main__':
     dataset = Dataset('../dataset/deepwriting_training.npz')
-    print("Dataset length:", len(dataset))
-
-    stroke, text = dataset[0]
-    print("Stroke tensor shape:", stroke.shape, "| dtype:", stroke.dtype)
-    print("Text tensor shape:", text.shape, "| dtype:", text.dtype)
-    print("Text tensor values:", text)
+    loader = DataLoader(dataset, batch_size=4, collate_fn=collate_fn)
+    
+    batch_strokes, batch_texts = next(iter(loader))
+    print("Batch strokes shape:", batch_strokes.shape)
+    print("Batch texts shape:", batch_texts.shape)
