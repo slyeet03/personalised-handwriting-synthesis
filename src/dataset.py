@@ -30,5 +30,11 @@ class Dataset(TorchDataset):
 
 
 
-#if __name__ == '__main__':
+if __name__ == '__main__':
+    dataset = Dataset('../dataset/deepwriting_training.npz')
+    print("Dataset length:", len(dataset))
 
+    stroke, text = dataset[0]
+    print("Stroke tensor shape:", stroke.shape, "| dtype:", stroke.dtype)
+    print("Text tensor shape:", text.shape, "| dtype:", text.dtype)
+    print("Text tensor values:", text)

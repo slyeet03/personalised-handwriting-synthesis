@@ -6,6 +6,8 @@ def build_vocab(alphabet):
 def encode_text(text, char_to_idx):
     indices = []
     for letter in text:
+        if letter == ' ':
+            letter = ''
         if letter not in char_to_idx:
             raise ValueError(f"Character {letter!r} not in vocabulary")
         indices.append(char_to_idx[letter])
