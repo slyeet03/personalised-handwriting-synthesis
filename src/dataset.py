@@ -6,7 +6,6 @@ from torch.utils.data import Dataset as TorchDataset
 
 import vocab
 
-
 class Dataset(TorchDataset):
     def __init__(self,path):
         self.data = np.load(path, allow_pickle=True)
