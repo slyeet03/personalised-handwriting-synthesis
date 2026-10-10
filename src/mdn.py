@@ -37,9 +37,9 @@ class MDNHead(nn.Module):
         e_raw       = raw[..., 6*M : 6*M + 1]
 
         pi      = F.softmax(pi_raw, dim=-1)
-        sigma_x = torch.exp(sigma_x_raw)
-        sigma_y = torch.exp(sigma_y_raw)
-        rho     = torch.tanh(rho_raw)
+        sigma_x = torch.exp(sigma_x_raw).clamp(min=1e-3)
+        sigma_y = torch.exp(sigma_y_raw).clamp(min=1e-3)
+        rho     = torch.tanh(rho_raw) * 0.99
         e       = torch.sigmoid(e_raw)
 
         return pi, mu_x, mu_y, sigma_x, sigma_y, rho, e
