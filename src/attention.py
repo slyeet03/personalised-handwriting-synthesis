@@ -19,7 +19,7 @@ class Attention(nn.Module):
         # sharpness
         beta  = torch.exp(raw[:, 1*K : 2*K])    
         # position
-        kappa = kappa_prev + torch.exp(raw[:, 2*K : 3*K])
+        kappa = kappa_prev + torch.exp(raw[:, 2*K : 3*K]) / 25
 
         U = char_onehot.shape[1]
         u = torch.arange(U, device=h.device).float().view(1, 1, U)   

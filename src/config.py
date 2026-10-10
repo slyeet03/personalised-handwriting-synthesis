@@ -1,0 +1,11 @@
+TRAIN_PATH = '../dataset/deepwriting_training.npz'
+VAL_PATH   = '../dataset/deepwriting_validation.npz'
+BATCH_SIZE = 16
+LR = 3e-4
+EPOCHS = 100 
+CLIP = 10.0
+VOCAB_SIZE = 70
+CKPT_DIR = '../checkpoints'
+SAMPLE_EVERY = 2                  
+SAMPLE_TEXT = "hello world"       
+OUT_DIR = '../outputs'
