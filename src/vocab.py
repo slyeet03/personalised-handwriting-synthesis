@@ -1,8 +1,8 @@
-# decoding the char label shit
+# decoding the char label stuff
 def build_vocab(alphabet):
     return sorted(alphabet.tolist())
 
-# taking a text and giving indices for teh character labels
+# taking a text and giving indices for the character labels
 def encode_text(text, char_to_idx):
     indices = []
     for letter in text:
