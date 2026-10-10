@@ -8,7 +8,7 @@ import torch.nn.functional as F
 # transform them into a different vector which represents where the 
 # pen should go next
 
-class MDNHead:
+class MDNHead(nn.Module):
     # M being how many different plausible next stroke at once we want
     def __init__(self, hidden_size, M):
         super().__init__()
