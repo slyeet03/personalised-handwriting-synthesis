@@ -1,7 +1,10 @@
+import random
+
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset as TorchDataset
+from torch.utils.data import Sampler
 
 import vocab
 
@@ -30,6 +33,8 @@ class Dataset(TorchDataset):
         self.indices = [i for i in range(len(strokes))
                         if (max_len is None or len(strokes[i]) <= max_len)
                         and text_ok(texts[i])]        
+        
+        self.lengths = [len(strokes[i]) for i in self.indices]
 
         print(f"kept {len(self.indices)} / {len(strokes)} samples")
 
@@ -62,5 +67,22 @@ def collate_fn(batch):
 
     return padded_strokes, padded_texts, mask, text_mask
 
+class BucketSampler(Sampler):
+    def __init__(self, lengths, batch_size, chunk=50):
+        self.lengths = lengths
+        self.bs = batch_size
+        self.chunk = chunk
 
+    def __iter__(self):
+        idx = list(range(len(self.lengths)))
+        random.shuffle(idx)
+        size = self.bs * self.chunk
+        batches = []
+        for s in range(0, len(idx), size):
+            part = sorted(idx[s:s + size], key=lambda i: self.lengths[i])
+            batches += [part[j:j + self.bs] for j in range(0, len(part), self.bs)]
+        random.shuffle(batches)
+        return iter(batches)
 
+    def __len__(self):
+        return (len(self.lengths) + self.bs - 1) // self.bs

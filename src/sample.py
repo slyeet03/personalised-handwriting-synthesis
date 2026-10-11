@@ -11,7 +11,8 @@ def sample(model, text, char_to_idx, device, max_steps=1500, greedy=False, temp=
     idx = torch.tensor([vocab.encode_text(text, char_to_idx)], device=device)
     char_onehot = F.one_hot(idx, 70).float()
     U = idx.shape[1]
-    text_mask = torch.ones(1, U, dtype=torch.bool, device=device)
+    char_onehot = F.pad(char_onehot, (0, 0, 0, 1))
+    text_mask = torch.ones(1, U+1, dtype=torch.bool, device=device)
 
     state = model.init_state(1, device)
     x = torch.zeros(1, 3, device=device)
@@ -49,7 +50,7 @@ def sample(model, text, char_to_idx, device, max_steps=1500, greedy=False, temp=
             phis.append(phi[0].cpu().numpy())
             x = torch.tensor([[dx, dy, pen]], dtype=torch.float32, device=device)
 
-            if state['kappa'].max().item() > U:
+            if len(points) > 20 and phi[0].argmax().item() == U:
                 break
 
     return np.array(points), np.array(phis)

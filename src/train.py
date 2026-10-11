@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 
 import config
-from dataset import Dataset, collate_fn
+from dataset import BucketSampler, Dataset, collate_fn
 from mdn import mdn_loss
 from model import SynthesisModel
 from sample import plot_strokes, sample
@@ -51,14 +51,16 @@ def main():
     device = get_device()
     print("device:", device)
 
-    train_ds = Dataset(config.TRAIN_PATH, max_len=200)
+    train_ds = Dataset(config.TRAIN_PATH, max_len=config.MAX_LEN)
 
     mean, std = train_ds.dict['mean'], train_ds.dict['std']
     char_to_idx = train_ds.char_to_idx
     os.makedirs(config.OUT_DIR, exist_ok=True)
 
-    train_loader = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True, collate_fn=collate_fn)
-    val_loader = DataLoader(Dataset(config.VAL_PATH, max_len=200), batch_size=config.BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
+    train_loader = DataLoader(train_ds,
+                          batch_sampler=BucketSampler(train_ds.lengths, config.BATCH_SIZE),
+                          collate_fn=collate_fn)    
+    val_loader = DataLoader(Dataset(config.VAL_PATH, max_len=config.MAX_LEN), batch_size=config.BATCH_SIZE, shuffle=False, collate_fn=collate_fn)
 
     model = SynthesisModel(vocab_size=config.VOCAB_SIZE).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LR)
