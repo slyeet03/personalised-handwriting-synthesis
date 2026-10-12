@@ -37,8 +37,8 @@ class MDNHead(nn.Module):
         e_raw       = raw[..., 6*M : 6*M + 1]
 
         pi      = F.softmax(pi_raw, dim=-1)
-        sigma_x = torch.exp(sigma_x_raw).clamp(min=1e-3)
-        sigma_y = torch.exp(sigma_y_raw).clamp(min=1e-3)
+        sigma_x = torch.exp(sigma_x_raw.clamp(max=5)).clamp(min=1e-3)
+        sigma_y = torch.exp(sigma_y_raw.clamp(max=5)).clamp(min=1e-3)
         rho     = torch.tanh(rho_raw) * 0.99
         e       = torch.sigmoid(e_raw)
 
@@ -60,11 +60,13 @@ def mdn_loss(pi, mu_x, mu_y, sigma_x, sigma_y, rho, e, true_dx, true_dy, true_pe
     one_minus_rho2 = 1 - rho**2
 
     # normalizing constant
-    denom = 2 * math.pi * sigma_x * sigma_y * torch.sqrt(one_minus_rho2)
-    N = torch.exp(-Z / (2 * one_minus_rho2)) / denom
+    log_N = (-math.log(2 * math.pi)
+         - torch.log(sigma_x) - torch.log(sigma_y)
+         - 0.5 * torch.log(one_minus_rho2)
+         - Z / (2 * one_minus_rho2))
 
-    mixture_density = torch.sum(pi * N, dim=-1)   # (batch, seq_len)
-    loss_position = -torch.log(mixture_density + 1e-8)
+    log_mix = torch.logsumexp(torch.log(pi + 1e-8) + log_N, dim=-1)   # (batch, seq_len)
+    loss_position = -log_mix
 
     # e had 3 dimensions so reducing it to 2 to do further calculations
     e = e.squeeze(-1)                             # (batch, seq_len)

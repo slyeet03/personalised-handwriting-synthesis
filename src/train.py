@@ -12,6 +12,7 @@ from mdn import mdn_loss
 from model import SynthesisModel
 from sample import plot_strokes, sample
 
+RESUME_PATH = os.path.join(config.CKPT_DIR,'resume.pt')
 
 def get_device():
     if torch.cuda.is_available():
@@ -66,48 +67,81 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=config.LR)
 
     os.makedirs(config.CKPT_DIR, exist_ok=True)
+    best_path = os.path.join(config.CKPT_DIR, 'best.pt')
+
+    start_epoch = 0
     best_val = float('inf')
 
-    for epoch in range(config.EPOCHS):
-        running= 0.0 # total loss
-        n = 0 # no. of batches
+    if os.path.exists(RESUME_PATH):
+        ckpt = torch.load(RESUME_PATH, map_location=device)
+
+        if isinstance(ckpt, dict) and 'model' in ckpt:
+            model.load_state_dict(ckpt['model'])
+            if 'opt' in ckpt:
+                optimizer.load_state_dict(ckpt['opt'])
+            start_epoch = ckpt.get('epoch', 121) + 1
+            best_val = ckpt.get('best_val', -2.55)
+            print(f"resumed from epoch {start_epoch}, best_val {best_val:.4f}")
+        else:
+            model.load_state_dict(ckpt)
+            start_epoch = 122
+            best_val = -2.55
+            print("old-format resume.pt: loaded weights only (fresh optimizer)")
+
+        for g in optimizer.param_groups:
+            g['lr'] = config.LR
+    
+    skipped = 0                                     
+
+    for epoch in range(start_epoch, config.EPOCHS): 
+        running = 0.0
+        n = 0
         for step, batch in enumerate(train_loader):
             loss = compute_loss(model, batch, device)
 
-            # stop if NaN comes so the time is not wasted and i dont loose my mind
-            if torch.isnan(loss):
-                print("NaN loss at epoch", epoch, "step", step, "- stopping")
-                return
+            if not torch.isfinite(loss):
+                skipped += 1
+                print(f"non-finite loss at epoch {epoch+1} step {step}, skipped ({skipped})")
+                if skipped > 20: return
+                continue
 
-            # clear left over gradient form pervious step
             optimizer.zero_grad()
-            # backpropagation my goat
             loss.backward()
-            # clipping so when bad batch creates huge gradient others dont get affected
-            torch.nn.utils.clip_grad_norm_(model.parameters(), config.CLIP)
-            # update them weights
+            grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.CLIP)   
+            if not torch.isfinite(grad_norm):
+                skipped += 1
+                print(f"non-finite gradient at epoch {epoch+1} step {step}, skipped ({skipped})")
+                if skipped > 20: return
+                continue
+
             optimizer.step()
 
-            running += loss.item() 
+            running += loss.item()
             n += 1
 
-        train_loss = running / n
+        train_loss = running / max(n, 1)            
         msg = f"epoch {epoch+1}/{config.EPOCHS} | train loss {train_loss:.4f}"
 
-        if val_loader is not None:
-            val_loss = evaluate(model, val_loader, device)
-            msg += f" | val loss {val_loss:.4f}"
-            if val_loss < best_val:
-                best_val = val_loss
-                torch.save(model.state_dict(), os.path.join(config.CKPT_DIR, 'best.pt'))
+        val_loss = evaluate(model, val_loader, device)
+        msg += f" | val loss {val_loss:.4f}"
+        if val_loss < best_val:
+            best_val = val_loss
+            torch.save(model.state_dict(), best_path)
         print(msg)
+
+        
+        torch.save({'model': model.state_dict(),
+                    'opt': optimizer.state_dict(),
+                    'epoch': epoch,
+                    'best_val': best_val},
+                   RESUME_PATH)
+
         if (epoch + 1) % config.SAMPLE_EVERY == 0:
-            points, _ = sample(model, config.SAMPLE_TEXT, char_to_idx, device, greedy=False, temp=0.2)
+            points, _ = sample(model, config.SAMPLE_TEXT, char_to_idx, device, greedy=False, temp=0.3)
             plot_strokes(points, mean, std, save_path=f'{config.OUT_DIR}/epoch_{epoch+1}.png')
             model.train()
 
     torch.save(model.state_dict(), os.path.join(config.CKPT_DIR, 'last.pt'))
-
 
 if __name__ == '__main__':
     main()

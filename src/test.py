@@ -6,18 +6,17 @@ import vocab
 from model import SynthesisModel
 from sample import sample
 
-# ---------- settings ----------
 CKPT = '../checkpoints/best.pt'
 DATA = '../dataset/deepwriting_training.npz'
-TEXT = "hello world"
-TEMPS = [0.3]        # one grid row-block per temperature
+TEXT = "Mount Everest"
+TEMPS = [0.3]        
 N = 8                     # samples per temperature
 OUT = '../outputs'
 
 
 def draw(ax, points, mean, std):
-    raw = points[:, :2] * std[:2] + mean[:2]        # undo normalization
-    xy = np.cumsum(raw, axis=0)                     # offsets -> positions
+    raw = points[:, :2] * std[:2] + mean[:2]        
+    xy = np.cumsum(raw, axis=0)                     
     pen = points[:, 2]
     start = 0
     for i in range(len(pen)):
