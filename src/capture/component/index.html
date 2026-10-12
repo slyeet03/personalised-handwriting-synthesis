@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+        background: transparent;
+      }
+      #pad {
+        border: 2px solid #666;
+        border-radius: 6px;
+        background: #fff;
+        touch-action: none;
+        display: block;
+      }
+      #bar {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      button {
+        padding: 8px 16px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      #info {
+        margin-left: auto;
+        color: #888;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="pad"></canvas>
+    <div id="bar">
+      <button id="clear">Clear</button>
+      <button id="undo">Undo stroke</button>
+      <button id="save">Save line ✔</button>
+      <span id="info">pen: -</span>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("pad");
+      const ctx = canvas.getContext("2d");
+      const info = document.getElementById("info");
+
+      let W = 900,
+        H = 240,
+        ready = false;
+      let strokes = [],
+        current = null,
+        t0 = null,
+        pointerType = null;
+
+      function post(type, extra) {
+        window.parent.postMessage(
+          Object.assign({ isStreamlitMessage: true, type: type }, extra || {}),
+          "*",
+        );
+      }
+
+      function setup(w, h) {
+        W = w;
+        H = h;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        canvas.style.width = W + "px";
+        canvas.style.height = H + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        redraw();
+        post("streamlit:setFrameHeight", { height: H + 72 });
+      }
+
+      function guide(y, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      function seg(a, b) {
+        // width follows pressure
+        ctx.lineWidth = 0.8 + 3.2 * b[2];
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+      }
+
+      function redraw() {
+        ctx.clearRect(0, 0, W, H);
+        guide(H * 0.25, "#eee"); // ascender line
+        guide(H * 0.42, "#ddd"); // x-height line
+        guide(H * 0.62, "#aaa"); // baseline
+        ctx.strokeStyle = "#000";
+        ctx.fillStyle = "#000";
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        for (const s of strokes) {
+          if (s.length === 1) {
+            ctx.beginPath();
+            ctx.arc(s[0][0], s[0][1], 1.5, 0, 6.3);
+            ctx.fill();
+          }
+          for (let i = 1; i < s.length; i++) seg(s[i - 1], s[i]);
+        }
+      }
+
+      function pt(e) {
+        // [x, y, pressure, time_ms]
+        if (t0 === null) t0 = e.timeStamp;
+        const r = canvas.getBoundingClientRect();
+        return [
+          +(e.clientX - r.left).toFixed(2),
+          +(e.clientY - r.top).toFixed(2),
+          +e.pressure.toFixed(3),
+          +(e.timeStamp - t0).toFixed(1),
+        ];
+      }
+
+      canvas.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        canvas.setPointerCapture(e.pointerId);
+        pointerType = pointerType || e.pointerType;
+        current = [pt(e)];
+        strokes.push(current);
+      });
+
+      canvas.addEventListener("pointermove", (e) => {
+        info.textContent =
+          e.pointerType + "   pressure " + e.pressure.toFixed(2);
+        if (!current) return; // hovering, not drawing
+        e.preventDefault();
+        const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+        for (const ev of evs.length ? evs : [e]) {
+          const p = pt(ev),
+            prev = current[current.length - 1];
+          current.push(p);
+          seg(prev, p);
+        }
+      });
+
+      function end() {
+        current = null;
+      }
+      canvas.addEventListener("pointerup", end);
+      canvas.addEventListener("pointercancel", end);
+
+      document.getElementById("clear").onclick = () => {
+        strokes = [];
+        t0 = null;
+        redraw();
+      };
+      document.getElementById("undo").onclick = () => {
+        strokes.pop();
+        if (!strokes.length) t0 = null;
+        redraw();
+      };
+      document.getElementById("save").onclick = () => {
+        if (!strokes.length) {
+          info.textContent = "write something first";
+          return;
+        }
+        post("streamlit:setComponentValue", {
+          dataType: "json",
+          value: {
+            id: Date.now() + "-" + Math.random().toString(36).slice(2),
+            width: W,
+            height: H,
+            pointer_type: pointerType,
+            strokes: strokes,
+          },
+        });
+        info.textContent = "saved ✔";
+      };
+
+      window.addEventListener("message", (e) => {
+        if (e.data.type !== "streamlit:render") return;
+        const a = e.data.args || {};
+        if (!ready || a.width !== W || a.height !== H) {
+          setup(a.width || 900, a.height || 240);
+          ready = true;
+        }
+      });
+      post("streamlit:componentReady", { apiVersion: 1 });
+    </script>
+  </body>
+</html>

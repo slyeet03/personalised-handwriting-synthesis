@@ -79,12 +79,12 @@ def main():
             model.load_state_dict(ckpt['model'])
             if 'opt' in ckpt:
                 optimizer.load_state_dict(ckpt['opt'])
-            start_epoch = ckpt.get('epoch', 121) + 1
+            start_epoch = ckpt.get('epoch', 141) + 1
             best_val = ckpt.get('best_val', -2.55)
             print(f"resumed from epoch {start_epoch}, best_val {best_val:.4f}")
         else:
             model.load_state_dict(ckpt)
-            start_epoch = 122
+            start_epoch = 142
             best_val = -2.55
             print("old-format resume.pt: loaded weights only (fresh optimizer)")
 
