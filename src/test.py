@@ -8,7 +8,7 @@ from sample import sample
 
 CKPT = '../checkpoints/best.pt'
 DATA = '../dataset/deepwriting_training.npz'
-TEXT = "Mount Everest"
+TEXT = "hello world"
 TEMPS = [0.3]        
 N = 8                     # samples per temperature
 OUT = '../outputs'
