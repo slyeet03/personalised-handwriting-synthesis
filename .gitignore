@@ -4,4 +4,3 @@ __pycache__/
 *.py[cod]
 *$py.class
 outputs/
-personal_data/

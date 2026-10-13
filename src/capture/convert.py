@@ -104,3 +104,10 @@ print("points/char:", np.median([len(s) / len(t) for s, t in zip(S, T)]))
 for i in range(min(3, len(S))):
     plot_strokes(S[i], mean, std, save_path=f'../../outputs/personal_check_{i}.png')
 print("plots saved to outputs/personal_check_*.png")
+
+per = sorted(((i, len(T[i]), len(S[i]) / len(T[i]), S[i][:, 0].std(), S[i][:, 1].std())
+              for i in range(len(S))), key=lambda r: r[3])
+for title, rows in [("lowest x-std", per[:5]), ("highest x-std", per[-5:])]:
+    print(title)
+    for i, n, p, sx, sy in rows:
+        print(f"  {T[i]!r:28} chars={n:>2} pts/char={p:4.1f} xstd={sx:.2f} ystd={sy:.2f}")
