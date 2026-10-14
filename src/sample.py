@@ -79,4 +79,44 @@ def plot_strokes(points, mean, std, save_path=None):
     else:
         plt.show()
 
- 
+
+
+def catmull_rom(p, n=8):
+    p = np.asarray(p, dtype=float)
+    if len(p) < 3:
+        return p
+    P = np.vstack([p[0], p, p[-1]])              
+    t = np.linspace(0, 1, n, endpoint=False)[:, None]
+    out = []
+    for i in range(1, len(P) - 2):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+        out.append(0.5 * (2 * p1 + (-p0 + p2) * t
+                          + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t ** 2
+                          + (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3))
+    out.append(p[-1:])
+    return np.vstack(out)
+
+
+def plot_smooth(points, mean, std, save_path=None, n=8):
+    raw = points[:, :2] * std[:2] + mean[:2]
+    xy = np.cumsum(raw, axis=0)
+    pen = points[:, 2]
+
+    plt.figure(figsize=(10, 3))
+    start = 0
+    for i in range(len(pen)):
+        if pen[i] == 1 or i == len(pen) - 1:
+            s = xy[start:i + 1]
+            if len(s) == 1:
+                plt.plot(s[0, 0], s[0, 1], 'k.', markersize=2)      
+            else:
+                c = catmull_rom(s, n)
+                plt.plot(c[:, 0], c[:, 1], 'k', linewidth=1.2, solid_capstyle='round')
+            start = i + 1
+    plt.gca().invert_yaxis()
+    plt.axis('equal')
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+    else:
+        plt.show()

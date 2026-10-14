@@ -4,29 +4,33 @@ import torch
 
 import vocab
 from model import SynthesisModel
-from sample import sample
+from sample import catmull_rom, sample
 
-CKPT = '../checkpoints/best.pt'
-DATA = '../dataset/deepwriting_training.npz'
-TEXT = "hello world"
+CKPT = '../checkpoints/personal_best.pt'
+DATA = '../personal_data/personal.npz'
+TEXT = "transition function"
 TEMPS = [0.3]        
 N = 8                     # samples per temperature
 OUT = '../outputs'
 
 
 def draw(ax, points, mean, std):
-    raw = points[:, :2] * std[:2] + mean[:2]        
-    xy = np.cumsum(raw, axis=0)                     
+    raw = points[:, :2] * std[:2] + mean[:2]
+    xy = np.cumsum(raw, axis=0)
     pen = points[:, 2]
     start = 0
     for i in range(len(pen)):
         if pen[i] == 1 or i == len(pen) - 1:
-            ax.plot(xy[start:i+1, 0], xy[start:i+1, 1], 'k', linewidth=1)
+            s = xy[start:i+1]
+            if len(s) == 1:
+                ax.plot(s[0, 0], s[0, 1], 'k.', markersize=2)
+            else:
+                c = catmull_rom(s, 8)
+                ax.plot(c[:, 0], c[:, 1], 'k', linewidth=1)
             start = i + 1
     ax.invert_yaxis()
     ax.set_aspect('equal')
     ax.set_xticks([]); ax.set_yticks([])
-
 
 def main():
     device = torch.device('cpu')                    

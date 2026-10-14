@@ -10,7 +10,7 @@ import config
 from dataset import BucketSampler, Dataset, collate_fn
 from mdn import mdn_loss
 from model import SynthesisModel
-from sample import plot_strokes, sample
+from sample import plot_smooth, plot_strokes, sample
 
 RESUME_PATH = os.path.join(config.CKPT_DIR,'resume.pt')
 
@@ -138,7 +138,7 @@ def main():
 
         if (epoch + 1) % config.SAMPLE_EVERY == 0:
             points, _ = sample(model, config.SAMPLE_TEXT, char_to_idx, device, greedy=False, temp=0.3)
-            plot_strokes(points, mean, std, save_path=f'{config.OUT_DIR}/epoch_{epoch+1}.png')
+            plot_smooth(points, mean, std, save_path=f'{config.OUT_DIR}/epoch_{epoch+1}.png')
             model.train()
 
     torch.save(model.state_dict(), os.path.join(config.CKPT_DIR, 'last.pt'))
