@@ -30,7 +30,6 @@ src/
   layout.py           Text wrapping into chunks, best-of-N generation
   render.py           Page renderer: chunk packing, ink width, PNG and SVG output
   app.py              Streamlit generator UI
-  bench.py            Speed benchmark (device and batch size)
   test_samples.py     Grid of generated samples plus attention heatmaps
   prime_test.py       Primed vs unprimed comparison
   capture/
@@ -119,7 +118,6 @@ cp ../checkpoints/best.pt ../checkpoints/base_pretrained.pt
 
 ```bash
 cd src/capture
-python3 check_prompts.py      # validate the prompt list
 streamlit run capture_app.py
 ```
 
@@ -198,11 +196,11 @@ Negative values are expected: the position loss is the negative log of a probabi
 
 ##### Primed vs Unprimed
 
-![](outputs/prime_compare.png)
+![](assets/prime_compare.png)
 
 ##### Generated Page
 
-![](outputs/app_1.png)
+![](assets/app_1.png)
 
 ## Data Format
 
