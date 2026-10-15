@@ -42,7 +42,7 @@ def main():
 
     # run the model once and save the picture
     def snap(tag):
-        pts, _ = sample(model, config.SAMPLE_TEXT, ds.char_to_idx, device,
+        pts, _ = sample(model, config.TEXT, ds.char_to_idx, device,
                         greedy=False, temp=0.3)
         plot_smooth(pts, mean, std, save_path=f'{config.OUT_DIR}/ft_{tag}.png')
         model.train()

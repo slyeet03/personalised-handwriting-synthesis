@@ -2,13 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+import config
 import vocab
 from model import SynthesisModel
 from sample import catmull_rom, sample
 
 CKPT = '../checkpoints/personal_best.pt'
 DATA = '../personal_data/personal.npz'
-TEXT = "transition function"
+TEXT = config.TEXT
 TEMPS = [0.3]        
 N = 8                     # samples per temperature
 OUT = '../outputs'

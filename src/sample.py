@@ -96,6 +96,15 @@ def catmull_rom(p, n=8):
     out.append(p[-1:])
     return np.vstack(out)
 
+def smooth_stroke(s, passes=2):
+    s = np.asarray(s, dtype=float)
+    if len(s) < 4:
+        return s
+    for _ in range(passes):
+        t = s.copy()
+        t[1:-1] = 0.25 * s[:-2] + 0.5 * s[1:-1] + 0.25 * s[2:]
+        s = t
+    return s
 
 def plot_smooth(points, mean, std, save_path=None, n=8):
     raw = points[:, :2] * std[:2] + mean[:2]
