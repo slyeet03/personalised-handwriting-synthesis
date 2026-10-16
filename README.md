@@ -13,6 +13,16 @@ The pipeline has four stages:
 3. **Fine-tuning** the pretrained model on the captured lines at a low learning rate.
 4. **Generation**: the text is split into short chunks, each chunk is generated after priming the model with a real sample of the person's handwriting, and the chunks are laid out and drawn on a page.
 
+#### Visualizations
+
+##### Primed vs Unprimed
+
+![](assets/prime_compare.png)
+
+##### Generated Page
+
+![](assets/app_1.png)
+
 ## Project Structure
 
 ```
@@ -191,16 +201,6 @@ Negative values are expected: the position loss is the negative log of a probabi
 | ------------------------ | ----- |
 | Base model on val lines  | 3.93  |
 | Best fine-tuned val loss | -2.19 |
-
-#### Visualizations
-
-##### Primed vs Unprimed
-
-![](assets/prime_compare.png)
-
-##### Generated Page
-
-![](assets/app_1.png)
 
 ## Data Format
 
