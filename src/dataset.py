@@ -86,3 +86,10 @@ class BucketSampler(Sampler):
 
     def __len__(self):
         return (len(self.lengths) + self.bs - 1) // self.bs
+
+def split_indices(n, seed=0):
+    idx = list(range(n))
+    random.Random(seed).shuffle(idx)
+    k = max(10, n // 10)
+    return idx[2 * k:], idx[:k], idx[k:2 * k]      # train, val, test
+
