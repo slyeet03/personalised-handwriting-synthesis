@@ -170,7 +170,7 @@ To render from a script instead, run `python3 render.py`.
 | Metric                        | Value       |
 | ----------------------------- | ----------- |
 | Train loss (NLL per timestep) | about -2.57 |
-| Validation loss               | about -2.55 |
+| Validation loss               | about -2.62 |
 
 Negative values are expected: the position loss is the negative log of a probability density, and a tight Gaussian can have a density above 1.
 
@@ -178,19 +178,19 @@ Negative values are expected: the position loss is the negative log of a probabi
 
 #### Configuration
 
-| Parameter      | Value                               |
-| -------------- | ----------------------------------- |
-| Captured lines | TODO: total after the extra prompts |
-| Validation     | about 10% of lines                  |
-| Learning rate  | 1e-4                                |
-| Early stopping | patience of 10 epochs               |
+| Parameter      | Value                            |
+| -------------- | -------------------------------- |
+| Captured lines | 300 (240 train, 30 val, 30 test) |
+| Validation     | about 10% of lines               |
+| Learning rate  | 1e-4                             |
+| Early stopping | patience of 10 epochs            |
 
 #### Metrics
 
-| Metric                       | Value |
-| ---------------------------- | ----- |
-| Base model on your val lines | TODO  |
-| Best fine-tuned val loss     | TODO  |
+| Metric                   | Value |
+| ------------------------ | ----- |
+| Base model on val lines  | 3.93  |
+| Best fine-tuned val loss | -2.19 |
 
 #### Visualizations
 
@@ -259,3 +259,4 @@ The DeepWriting `char_labels` are not indices into the `alphabet` array. They we
 - [Generating Sequences With Recurrent Neural Networks, Alex Graves](https://arxiv.org/abs/1308.0850)
 - [DeepWriting: Making Digital Ink Editable via Deep Generative Modeling, Aksan et al.](https://arxiv.org/abs/1801.08379)
 - [DeepWriting code and dataset](https://github.com/emreaksan/deepwriting)
+- [StatQuest with Josh Starmer youtube channel](https://www.youtube.com/@statquest)
